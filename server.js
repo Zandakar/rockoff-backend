@@ -1,6 +1,6 @@
 "use strict";
 
-const serverPort = 3000,
+const serverPort = 8000,
   http = require("http"),
   express = require("express"),
   app = express(),
@@ -11,6 +11,8 @@ const serverPort = 3000,
 //when a websocket connection is established
 websocketServer.on("connection", (webSocketClient) => {
   //send feedback to the incoming connection
+  console.log("Got a connection");
+
   webSocketClient.send('{ "connection" : "ok"}');
 
   //when a message is received
