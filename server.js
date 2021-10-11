@@ -8,8 +8,18 @@ const serverPort = 8000,
   WebSocket = require("ws"),
   websocketServer = new WebSocket.Server({ server });
 
+websocketServer.getUniqueID = function () {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + "-" + s4();
+};
+
 //when a websocket connection is established
-websocketServer.on("connection", (webSocketClient) => {
+websocketServer.on("connection", (webSocketClient, req) => {
+  webSocketClient.id = websocketServer.getUniqueID();
   //send feedback to the incoming connection
   console.log("Got a connection");
 
@@ -20,6 +30,8 @@ websocketServer.on("connection", (webSocketClient) => {
     console.log("recieved message: ", message);
     //for each websocket client
     websocketServer.clients.forEach((client) => {
+      console.log("Client.ID: " + client.id);
+
       //send the client the current message
       client.send(JSON.stringify({ message: message }));
     });
