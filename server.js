@@ -13,14 +13,15 @@ websocketServer.on("connection", (webSocketClient) => {
   //send feedback to the incoming connection
   console.log("Got a connection");
 
-  webSocketClient.send('{ "connection" : "ok"}');
+  webSocketClient.send({ connection: "ok" });
 
   //when a message is received
   webSocketClient.on("message", (message) => {
+    console.log("recieved message: ", message);
     //for each websocket client
     websocketServer.clients.forEach((client) => {
       //send the client the current message
-      client.send(`{ "message" : ${message} }`);
+      client.send({ message: message });
     });
   });
 });
