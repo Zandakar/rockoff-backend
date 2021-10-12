@@ -8,32 +8,43 @@ const serverPort = 8000,
   WebSocket = require("ws"),
   websocketServer = new WebSocket.Server({ server });
 
-websocketServer.getUniqueID = function () {
+websocketServer.generateClientId = function () {
   function s4() {
     return Math.floor((1 + Math.random()) * 0x10000)
       .toString(16)
       .substring(1);
   }
-  return s4() + s4() + "-" + s4();
+  return "client" + "-" + s4() + "-" + s4() + "-" + s4();
 };
 
 //when a websocket connection is established
 websocketServer.on("connection", (webSocketClient, req) => {
-  webSocketClient.id = websocketServer.getUniqueID();
-  //send feedback to the incoming connection
+  const clientId = websocketServer.generateClientId();
+  webSocketClient.id = clientId;
   console.log("Got a connection");
 
-  webSocketClient.send(JSON.stringify({ connection: "ok" }));
+  try {
+    const payload = JSON.stringify({ connection: "ok", clientId });
+    webSocketClient.send(payload);
+  } catch (e) {
+    console.error(e);
+  }
 
   //when a message is received
-  webSocketClient.on("message", (message) => {
-    console.log("recieved message: ", message);
-    //for each websocket client
-    websocketServer.clients.forEach((client) => {
-      console.log("Client.ID: " + client.id);
+  webSocketClient.on("message", (payload) => {
+    console.log("recieved message");
 
-      //send the client the current message
-      client.send(JSON.stringify({ message: message }));
+    let returnedMessage = "";
+    try {
+      const parsedMessage = JSON.parse(payload);
+      console.log(parsedMessage);
+      returnedMessage = `${parsedMessage.displayName} says: ${parsedMessage.message}`;
+    } catch (e) {
+      console.error(e);
+    }
+
+    websocketServer.clients.forEach((client) => {
+      client.send(JSON.stringify({ message: returnedMessage }));
     });
   });
 });
