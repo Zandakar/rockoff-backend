@@ -84,7 +84,7 @@ const handleCommand = (parsedPayload) => {
           if (!game.started) {
             game.players.push(clientId);
             console.log("New player joined. Matching players");
-            sendCommands(COMMANDS.GAME_MATCH_FOUND, game.players);
+            sendCommands(COMMANDS.GAME_MATCH_FOUND, game.players, game);
             game.started = true;
           }
         }
