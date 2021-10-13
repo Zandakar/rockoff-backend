@@ -65,7 +65,7 @@ const saveClient = (clientId) => {
 websocketServer.on("connection", (webSocketClient, req) => {
   const newClientId = generateClientId();
   webSocketClient.clientId = newClientId;
-  console.log("Got a connection");
+  console.log("\n\nGot a connection. Sending client it's details...\n\n");
 
   try {
     const payload = JSON.stringify({
@@ -79,7 +79,7 @@ websocketServer.on("connection", (webSocketClient, req) => {
 
   //when a message is received
   webSocketClient.on("message", (payload) => {
-    console.log("recieved message");
+    console.log("recieved message:");
 
     try {
       const parsedPayload = JSON.parse(payload);
