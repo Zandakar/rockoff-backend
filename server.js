@@ -38,7 +38,17 @@ websocketServer.on("connection", (webSocketClient, req) => {
     try {
       const parsedMessage = JSON.parse(payload);
       console.log(parsedMessage);
-      returnedMessage = `${parsedMessage.displayName} says: ${parsedMessage.message}`;
+      console.log(typeof parsedMessage.message);
+
+      if (parsedMessage.message) {
+        const { command = "" } = parsedMessage.message;
+        console.log("parsedMessage.command");
+        if (command === "INVITE") {
+          console.log("Generating invite link");
+        }
+      }
+
+      // returnedMessage = `${parsedMessage.displayName} says: ${parsedMessage.message}`;
     } catch (e) {
       console.error(e);
     }
