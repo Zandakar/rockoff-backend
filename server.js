@@ -36,7 +36,7 @@ const setupGame = (clientId) => {
   console.log("setupGame");
 
   const gameId = generateId();
-  const gameInfo = { gameId, players: [clientId] };
+  const gameInfo = { gameId, players: [clientId], started: false };
   currentGames.push(gameInfo);
   return gameInfo;
 };
@@ -81,9 +81,12 @@ const handleCommand = (parsedPayload) => {
         if (game.players.includes(clientId)) {
           console.log("player already in game");
         } else {
-          game.players.push(clientId);
-          console.log("New player joined. Matching players");
-          sendCommands(COMMANDS.GAME_MATCH_FOUND, game.players);
+          if (!game.started) {
+            game.players.push(clientId);
+            console.log("New player joined. Matching players");
+            sendCommands(COMMANDS.GAME_MATCH_FOUND, game.players);
+            game.started = true;
+          }
         }
       }
     });
