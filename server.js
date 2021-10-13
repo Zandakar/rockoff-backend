@@ -11,6 +11,12 @@ const serverPort = 8000,
 const clientIdMap = [];
 const currentGames = [];
 
+const COMMANDS = {
+  CLIENT_ACK: "CLIENT_ACK",
+  CONNECTED: "CONNECTED",
+  CREATE_GAME: "CREATE_GAME",
+};
+
 const generateId = () => {
   // Example: 8294-f28e-a31c
   function s4() {
@@ -27,23 +33,18 @@ const setupGame = (clientId) => {
   console.log("setupGame");
 
   const gameId = generateId();
-
   const gameInfo = { gameId, players: [clientId] };
   currentGames.push(gameInfo);
   return gameInfo;
 };
 
-const sendMessage = (command = "", recievingClients = [], payload = {}) => {
-  console.log("sendMessage");
-  console.log(recievingClients);
-  // console.log(`---------- websocketServer.clients ----------`);
-  // console.log(websocketServer.clients);
+const sendMessages = (command = "", recievingClients = [], payload = {}) => {
+  console.log("sendMessages");
 
   websocketServer.clients.forEach((client) => {
     const { clientId } = client;
-    console.log(clientId);
     if (recievingClients.includes(clientId)) {
-      console.log("sending message to:", clientId);
+      console.log(`sending ${command} to ${clientId}`);
       client.send(JSON.stringify({ command, ...payload }));
     }
   });
@@ -61,7 +62,10 @@ websocketServer.on("connection", (webSocketClient, req) => {
   console.log("Got a connection");
 
   try {
-    const payload = JSON.stringify({ connection: "ok", clientId: newClientId });
+    const payload = JSON.stringify({
+      command: COMMANDS.CONNECTED,
+      clientId: newClientId,
+    });
     webSocketClient.send(payload);
   } catch (e) {
     console.error(e);
@@ -78,24 +82,18 @@ websocketServer.on("connection", (webSocketClient, req) => {
       if (parsedPayload) {
         const { clientId, command = "" } = parsedPayload;
 
-        if (command === "CLIENT_ACK") {
+        if (command === COMMANDS.CLIENT_ACK) {
           saveClient(clientId);
         }
 
-        if (command === "INVITE") {
+        if (command === "CREATE_GAME") {
           const gameInfo = setupGame(clientId);
-          sendMessage("GAME_CREATED", [clientId], gameInfo);
+          sendMessages("GAME_CREATED", [clientId], gameInfo);
         }
       }
-
-      // returnedMessage = `${parsedMessage.displayName} says: ${parsedMessage.message}`;
     } catch (e) {
       console.error(e);
     }
-
-    // websocketServer.clients.forEach((client) => {
-    //   client.send(JSON.stringify({ message: returnedMessage }));
-    // });
   });
 });
 
