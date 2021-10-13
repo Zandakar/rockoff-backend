@@ -12,9 +12,10 @@ const clientIdMap = [];
 const currentGames = [];
 
 const COMMANDS = {
-  CLIENT_ACK: "CLIENT_ACK",
+  CLIENT_CONNECTED_ACK: "CLIENT_CONNECTED_ACK",
   CONNECTED: "CONNECTED",
   CREATE_GAME: "CREATE_GAME",
+  GAME_CREATED: "GAME_CREATED",
 };
 
 const generateId = () => {
@@ -82,13 +83,13 @@ websocketServer.on("connection", (webSocketClient, req) => {
       if (parsedPayload) {
         const { clientId, command = "" } = parsedPayload;
 
-        if (command === COMMANDS.CLIENT_ACK) {
+        if (command === COMMANDS.CLIENT_CONNECTED_ACK) {
           saveClient(clientId);
         }
 
-        if (command === "CREATE_GAME") {
+        if (command === COMMANDS.CREATE_GAME) {
           const gameInfo = setupGame(clientId);
-          sendMessages("GAME_CREATED", [clientId], gameInfo);
+          sendMessages(COMMANDS.GAME_CREATED, [clientId], gameInfo);
         }
       }
     } catch (e) {
