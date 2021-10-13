@@ -41,12 +41,12 @@ const setupGame = (clientId) => {
   return gameInfo;
 };
 
-const sendCommands = (command = "", recievingClients = [], payload = {}) => {
+const sendCommands = (command = "", recievingClients = [], params = {}) => {
   websocketServer.clients.forEach((client) => {
     const { clientId } = client;
     if (recievingClients.includes(clientId)) {
       console.log(`sending ${command} to ${clientId}`);
-      client.send(JSON.stringify({ command, ...payload }));
+      client.send(JSON.stringify({ command, params: params }));
     }
   });
 };
@@ -75,17 +75,14 @@ const handleCommand = (parsedPayload) => {
   if (command === COMMANDS.GAME_JOINED) {
     currentGames.forEach((game) => {
       if (parsedPayload.params.gameId === game.gameId) {
-        console.log("game exists");
-        console.log(game);
-
         if (game.players.includes(clientId)) {
           console.log("player already in game");
         } else {
           if (!game.started) {
             game.players.push(clientId);
             console.log("New player joined. Matching players");
-            sendCommands(COMMANDS.GAME_MATCH_FOUND, game.players, game);
             game.started = true;
+            sendCommands(COMMANDS.GAME_MATCH_FOUND, game.players, game);
           }
         }
       }
