@@ -16,6 +16,8 @@ const COMMANDS = {
   CONNECTED: "CONNECTED",
   CREATE_GAME: "CREATE_GAME",
   GAME_CREATED: "GAME_CREATED",
+  GAME_JOINED: "GAME_JOINED",
+  GAME_MATCH_FOUND: "GAME_MATCH_FOUND",
 };
 
 const generateId = () => {
@@ -39,9 +41,7 @@ const setupGame = (clientId) => {
   return gameInfo;
 };
 
-const sendMessages = (command = "", recievingClients = [], payload = {}) => {
-  console.log("sendMessages");
-
+const sendCommands = (command = "", recievingClients = [], payload = {}) => {
   websocketServer.clients.forEach((client) => {
     const { clientId } = client;
     if (recievingClients.includes(clientId)) {
@@ -52,12 +52,41 @@ const sendMessages = (command = "", recievingClients = [], payload = {}) => {
 };
 
 const saveClient = (clientId) => {
-  console.log("saveClient");
-
   if (!clientId) {
     console.error("-- Recieved client ACK with no clientId --");
   } else {
+    console.log("Adding client to client list");
     clientIdMap.push({ clientId });
+  }
+};
+
+const handleCommand = (parsedPayload) => {
+  const { clientId, command = "" } = parsedPayload;
+
+  if (command === COMMANDS.CLIENT_CONNECTED_ACK) {
+    saveClient(clientId);
+  }
+
+  if (command === COMMANDS.CREATE_GAME) {
+    const gameInfo = setupGame(clientId);
+    sendCommands(COMMANDS.GAME_CREATED, [clientId], gameInfo);
+  }
+
+  if (command === COMMANDS.GAME_JOINED) {
+    currentGames.forEach((game) => {
+      if (parsedPayload.params.gameId === game.gameId) {
+        console.log("game exists");
+        console.log(game);
+
+        if (game.players.includes(clientId)) {
+          console.log("player already in game");
+        } else {
+          game.players.push(clientId);
+          console.log("New player joined. Matching players");
+          sendCommands(COMMANDS.GAME_MATCH_FOUND, game.players);
+        }
+      }
+    });
   }
 };
 
@@ -65,7 +94,7 @@ const saveClient = (clientId) => {
 websocketServer.on("connection", (webSocketClient, req) => {
   const newClientId = generateClientId();
   webSocketClient.clientId = newClientId;
-  console.log("\n\nGot a connection. Sending client it's details...\n\n");
+  console.log("\n\nGot a connection. Sending client it's details...\n");
 
   try {
     const payload = JSON.stringify({
@@ -78,7 +107,7 @@ websocketServer.on("connection", (webSocketClient, req) => {
   }
 
   //when a message is received
-  webSocketClient.on("message", (payload) => {
+  webSocketClient.on("message", (payload = {}) => {
     console.log("recieved message:");
 
     try {
@@ -86,16 +115,7 @@ websocketServer.on("connection", (webSocketClient, req) => {
       console.log(parsedPayload);
 
       if (parsedPayload) {
-        const { clientId, command = "" } = parsedPayload;
-
-        if (command === COMMANDS.CLIENT_CONNECTED_ACK) {
-          saveClient(clientId);
-        }
-
-        if (command === COMMANDS.CREATE_GAME) {
-          const gameInfo = setupGame(clientId);
-          sendMessages(COMMANDS.GAME_CREATED, [clientId], gameInfo);
-        }
+        handleCommand(parsedPayload);
       }
     } catch (e) {
       console.error(e);
