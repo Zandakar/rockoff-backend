@@ -53,7 +53,12 @@ const sendMessages = (command = "", recievingClients = [], payload = {}) => {
 
 const saveClient = (clientId) => {
   console.log("saveClient");
-  clientIdMap.push({ clientId });
+
+  if (!clientId) {
+    console.error("-- Recieved client ACK with no clientId --");
+  } else {
+    clientIdMap.push({ clientId });
+  }
 };
 
 //when a websocket connection is established
