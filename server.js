@@ -1,35 +1,34 @@
 "use strict";
 
 //  https://www.giacomovacca.com/2015/02/websockets-over-nodejs-from-plain-to.html
+//  https:stackoverflow.com/questions/31338927/how-to-create-securetls-ssl-websocket-server/36212597
 
-var fs = require("fs");
+const fs = require("fs");
+const https = require("https");
+var WebSocketServer = require("ws").Server;
 
-var ws_cfg = {
-  ssl: true,
-  port: 8000,
-  ssl_key: "/home/ubuntu/rockoff-backend-certs/privkey.pem",
-  ssl_cert: "/home/ubuntu/rockoff-backend-certs/cert.pem",
-};
+var privateKey = fs.readFileSync(
+  "/home/ubuntu/rockoff-backend-certs/privkey.pem",
+  "utf8"
+);
+var certificate = fs.readFileSync(
+  "/home/ubuntu/rockoff-backend-certs/cert.pem",
+  "utf8"
+);
 
-var processRequest = function (req, res) {
-  console.log("Request received.");
-};
+var credentials = { key: privateKey, cert: certificate };
+var express = require("express");
+var app = express();
 
-var httpServ = require("https");
-var app = null;
+//... bunch of other express stuff here ...
 
-app = httpServ
-  .createServer(
-    {
-      key: fs.readFileSync(ws_cfg.ssl_key),
-      cert: fs.readFileSync(ws_cfg.ssl_cert),
-    },
-    processRequest
-  )
-  .listen(ws_cfg.port);
+//pass in your express app and credentials to create an https server
+var httpsServer = https.createServer(credentials, app);
+httpsServer.listen(8000);
 
-var WSSERVER = require("ws").Server,
-  websocketServer = new WSSERVER({ server: app });
+var websocketServer = new WebSocketServer({
+  server: httpsServer,
+});
 
 const clientIdMap = [];
 const currentGames = [];
