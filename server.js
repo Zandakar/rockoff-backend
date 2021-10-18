@@ -1,12 +1,35 @@
 "use strict";
 
-const serverPort = 8000,
-  http = require("http"),
-  express = require("express"),
-  app = express(),
-  server = http.createServer(app),
-  WebSocket = require("ws"),
-  websocketServer = new WebSocket.Server({ server });
+//  https://www.giacomovacca.com/2015/02/websockets-over-nodejs-from-plain-to.html
+
+var fs = require("fs");
+
+var ws_cfg = {
+  ssl: true,
+  port: 8000,
+  ssl_key: "/home/ubuntu/rockoff-backend-certs/privkey.pem",
+  ssl_cert: "/home/ubuntu/rockoff-backend-certs/cert.pem",
+};
+
+var processRequest = function (req, res) {
+  console.log("Request received.");
+};
+
+var httpServ = require("https");
+var app = null;
+
+app = httpServ
+  .createServer(
+    {
+      key: fs.readFileSync(ws_cfg.ssl_key),
+      cert: fs.readFileSync(ws_cfg.ssl_cert),
+    },
+    processRequest
+  )
+  .listen(ws_cfg.port);
+
+var WSSERVER = require("ws").Server,
+  websocketServer = new WSSERVER({ server: app });
 
 const clientIdMap = [];
 const currentGames = [];
@@ -121,9 +144,4 @@ websocketServer.on("connection", (webSocketClient, req) => {
       console.error(e);
     }
   });
-});
-
-//start the web server
-server.listen(serverPort, () => {
-  console.log(`Websocket server started on port ` + serverPort);
 });
