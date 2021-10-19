@@ -4,11 +4,11 @@
 //  https:stackoverflow.com/questions/31338927/how-to-create-securetls-ssl-websocket-server/36212597
 
 const fs = require("fs");
-const https = require("https");
+const https = require("http");
 var WebSocketServer = require("ws").Server;
 
 var privateKey = fs.readFileSync(
-  "/home/ubuntu/rockoff-backend-certs/privkey.pem",
+  "/home/ubuntu/rockoff-backend-certs/key.pem",
   "utf8"
 );
 var certificate = fs.readFileSync(
