@@ -20,8 +20,6 @@ var credentials = { key: privateKey, cert: certificate };
 var express = require("express");
 var app = express();
 
-//... bunch of other express stuff here ...
-
 //pass in your express app and credentials to create an https server
 var httpsServer = https.createServer(credentials, app);
 httpsServer.listen(8000);
@@ -40,6 +38,7 @@ const COMMANDS = {
   GAME_CREATED: "GAME_CREATED",
   GAME_JOINED: "GAME_JOINED",
   GAME_MATCH_FOUND: "GAME_MATCH_FOUND",
+  UPDATE_DISLAY_NAME: "UPDATE_DISLAY_NAME",
 };
 
 const generateId = () => {
@@ -73,20 +72,32 @@ const sendCommands = (command = "", recievingClients = [], params = {}) => {
   });
 };
 
-const saveClient = (clientId) => {
+const saveClient = (clientId, displayName) => {
   if (!clientId) {
     console.error("-- Recieved client ACK with no clientId --");
   } else {
     console.log("Adding client to client list");
-    clientIdMap.push({ clientId });
+    clientIdMap.push({ clientId, displayName });
   }
 };
 
+const updateDisplayName = (blaClientId, displayName) => {
+  const index = clientIdMap.find((client) => {
+    client.clientId === blaClientId;
+  });
+
+  clientIdMap.splice(index, 1, { clientId: blaClientId, displayName });
+};
+
 const handleCommand = (parsedPayload) => {
-  const { clientId, command = "" } = parsedPayload;
+  const { clientId, command = "", params = {} } = parsedPayload;
 
   if (command === COMMANDS.CLIENT_CONNECTED_ACK) {
-    saveClient(clientId);
+    saveClient(clientId, params.displayName);
+  }
+
+  if (command === COMMANDS.UPDATE_DISLAY_NAME) {
+    updateDisplayName(clientId, params.displayName);
   }
 
   if (command === COMMANDS.CREATE_GAME) {
