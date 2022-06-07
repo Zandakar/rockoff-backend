@@ -11,4 +11,4 @@ const bla = () => {
   return 2;
 };
 
-module.exports = bla;
+export { bla };
